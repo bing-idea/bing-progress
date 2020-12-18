@@ -6,7 +6,7 @@
 				"navigationBarTitleText": "进度条示例"
 			}
 		}
-	],
+    ],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "uni-app",

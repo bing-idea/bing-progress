@@ -6,7 +6,6 @@
 	flex-direction: row;
 	align-items: center;
 	justify-content: space-around;
-	overflow: hidden;
 }
 .bp-marea {
 	/* #ifndef APP-NVUE */
@@ -28,17 +27,14 @@
 	/* #ifndef APP-NVUE */
 	display: flex;
 	/* #endif */
-	flex-direction: row;
 	align-items: center;
 	text-align: center;
 	justify-content: center;
 	z-index: 5;
-	overflow: hidden;
 }
 .bp-handle-text {
 	text-align: center;
 	z-index: 5;
-	overflow: hidden;
 }
 .bp-bar_max {
 	position: absolute;
@@ -55,16 +51,17 @@
 .bp-bar_active {
 	position: absolute;
 	z-index: 3;
-	overflow: hidden;
 }
 .bp-bar_sub_active {
 	position: absolute;
 	z-index: 2;
-	overflow: hidden;
 }
 .bp-value {
 	position: absolute;
 	text-align: center;
-	overflow: hidden;
 	z-index: 4;
+}
+.bp-handle-widget {
+	position: absolute;
+	z-index: 99;
 }

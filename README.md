@@ -1,10 +1,11 @@
 **uni-app 自定义进度条、滑动条组件**
 
-![效果图](https://vkceyugu.cdn.bspapp.com/VKCEYUGU-static/a700bd90-b7a2-11ea-b244-a9f5e5565f30.gif)
+![效果图](https://vkceyugu.cdn.bspapp.com/VKCEYUGU-static/b1a3d970-414b-11eb-bd01-97bc1429a9ff.gif)
 + 属性
 
     |参数|默认值|类型|说明|
     |:---|:---|:---|:---|
+	|bpname||String|**新增**，组件名，触发事件的返回值中会包含该组件名|
     |value|0|Number|设置进度条主进度的值，如50，通过动态设置该值实现进度条进度变化。|
 	|subValue|0|Number|设置进度条副进度的值|
 	|max|100|Number|最大值，主进度和副进度共用|
@@ -36,16 +37,25 @@
 	|continuous|true|Boolean|主进度进度条是否连续滑动，true连续滑动，false步进，即以step的间隔变化|
 	|subContinuous|true|Boolean|副进度进度条是否连续滑动，true连续滑动，false步进，即以step的间隔变化|
 	|reverse|false|Boolean|进度是否反转，为false时，进度条从左向右滑动，进度值向max靠近，为true时，向min靠近|
-    
-        
+	|widgetPos|top|String|**新增**，**NVUE不支持**，挂件在拖柄的什么位置 top, right, bottom, left|
+	|widgetHeight|40px|String,Number|**新增**，**NVUE不支持**，挂件的高|
+	|widgetWidth|50px|String,Number|**新增**，**NVUE不支持**，挂件的宽|
+	|widgetBorderRadius|5px|String,Number|**新增**，**NVUE不支持**，挂件的圆角半径|
+	|widgetOpacity|1|Number|**新增**，**NVUE不支持**，挂件的不透明度 0完全透明 1不透明|
+	|widgetOffset|'0px'|Number|**新增**，**NVUE不支持**，挂件距离组件的偏移量，正数原理组件，负数靠近组件|
+	|widgetUrl||String|**新增**，**NVUE不支持**，挂件图片|
+	|widgetAngle||Number|**新增**，**NVUE不支持**，挂件旋转角度|
++ 插槽
+	+ 支持通过插槽自定义挂件，使用插槽自定义挂件时，不能设置 **widgetUrl** 属性，注意修改属性 widgetHeigh 和 widgetWidth，使其与你的挂件一致
+
 + 事件
 
     |事件|返回参数|说明|
     |:---:|:---:|:---:|
-    |change|type:change, value:主进度值, sunValue: 副进度值|进度条进度变化触发|
-	|valuechange|type:change, value:主进度值, sunValue: 副进度值|主进度条进度变化触发，同时会触发change|
-	|subvaluechange|type:change, value:主进度值, sunValue: 副进度值|副进度条进度变化触发，同时会触发change|
-    |dragstart|type:dragstart, value:主进度值, sunValue: 副进度值|手指接触进度条触发|
-    |dragging|type:dragging, value:主进度值, sunValue: 副进度值|拖拽进度条触发|
-    |dragend|type:dragend, value:主进度值, sunValue: 副进度值|拖拽完成手指离开屏幕触发|
+    |change|bpname:组件名，组件绑定的bpname的值,type:change, value:主进度值, sunValue: 副进度值|进度条进度变化触发|
+	|valuechange|bpname:组件名，组件绑定的bpname的值,type:change, value:主进度值, sunValue: 副进度值|主进度条进度变化触发，同时会触发change|
+	|subvaluechange|bpname:组件名，组件绑定的bpname的值,type:change, value:主进度值, sunValue: 副进度值|副进度条进度变化触发，同时会触发change|
+    |dragstart|bpname:组件名，组件绑定的bpname的值,type:dragstart, value:主进度值, sunValue: 副进度值|手指接触进度条触发|
+    |dragging|bpname:组件名，组件绑定的bpname的值,type:dragging, value:主进度值, sunValue: 副进度值|拖拽进度条触发|
+    |dragend|bpname:组件名，组件绑定的bpname的值,type:dragend, value:主进度值, sunValue: 副进度值|拖拽完成手指离开屏幕触发|
 

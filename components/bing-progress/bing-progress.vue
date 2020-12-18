@@ -26,21 +26,44 @@
 			top:activeTop,bottom:activeBottom,left:activeLeft,right:activeRight,borderRadius:isActiveCircular?barBorderRadius:0}"></view>
 		</view>
 		<!-- #endif -->
-		<movable-area class="bp-marea" @touchmove.stop.prevent="touchmove" @touchstart="touchstart" @touchcancel="touchend" @touchend="touchend"
+		<movable-area id="bp-marea" class="bp-marea" @touchmove.stop.prevent="touchmove" @touchstart.stop.prevent="touchstart" @touchcancel="touchend" @touchend="touchend"
 		:style="{width:mareaWidth,height:mareaHeight,left:mareaLeft}">
 			<!-- 拖柄 -->
-			<movable-view class="bp-mview" :direction="direction=='vertical'?'vertical':'horizontal'" :animation="false"
+			<movable-view id="bp-mview" class="bp-mview" :direction="direction=='vertical'?'vertical':'horizontal'" :animation="false"
 			 :disabled="true" :x="handleX" :y="handleY" friction="10" damping="100"
 			:style="{width:mhandleWidth,height:mhandleHeight,backgroundColor:handleColor,
 			borderRadius:handleBorderRadius,fontSize:infoFontSize,top:mhandleTop}">
-				<view class="bp-handle" :style="{fontSize:infoFontSize,width:mhandleWidth,height:mhandleHeight,borderRadius:handleBorderRadius}">
+				<view id="bp-handle" class="bp-handle" :style="{fontSize:infoFontSize,width:mhandleWidth,height:mhandleHeight,borderRadius:handleBorderRadius}">
 					<image class="bp-handle-img" :src="handleImgUrl" v-if="handleImgUrl" 
 					:style="{fontSize:infoFontSize,width:mhandleWidth,height:mhandleHeight,borderRadius:handleBorderRadius}"></image>
+					<!-- 进度值 -->
 					<text class="bp-handle-text" v-if="handleImgUrl=='' && infoAlign=='handle' && showInfo" 
 					:style="{fontSize:infoFontSize,color:infoColor,width:mhandleWidth,height:textHeight,borderRadius:'20px'}">{{ infoContent=='subValue'?msubValue:showValue }}{{ infoEndText }}</text>
+					<!-- 挂件 -->
+					<!-- #ifndef APP-NVUE -->
+					<!-- 图片挂件 -->
+					<image v-if="widgetPos=='top' && widgetUrl" class="bp-handle-widget" :src="widgetUrl" :style="{flexDirection: 'column',borderRadius:mwidgetBorderRadius, bottom: moffset,width:mwidgetWidth,height:mwidgetHeight,opacity:widgetOpacity,transform: mwidgetAngle}"></image>
+					<image v-if="widgetPos=='right' && widgetUrl" class="bp-handle-widget" :src="widgetUrl" :style="{flexDirection: 'row',borderRadius:mwidgetBorderRadius,left: moffset,width:mwidgetWidth,height:mwidgetHeight,opacity:widgetOpacity,transform: mwidgetAngle}"></image>
+					<image v-if="widgetPos=='bottom' && widgetUrl" class="bp-handle-widget" :src="widgetUrl" :style="{flexDirection: 'column',borderRadius:mwidgetBorderRadius,top: moffset,width:mwidgetWidth,height:mwidgetHeight,opacity:widgetOpacity,transform: mwidgetAngle}"></image>
+					<image v-if="widgetPos=='left' && widgetUrl" class="bp-handle-widget" :src="widgetUrl" :style="{flexDirection: 'row',borderRadius:mwidgetBorderRadius,right: moffset,width:mwidgetWidth,height:mwidgetHeight,opacity:widgetOpacity,transform: mwidgetAngle}"></image>
+					<!-- 自定义元素挂件 -->
+					<view v-if="widgetPos=='top' && widgetUrl==''" class="bp-handle-widget" :style="{flexDirection: 'column',borderRadius:mwidgetBorderRadius,bottom: moffset,width:mwidgetWidth,height:mwidgetHeight,opacity:widgetOpacity,transform: mwidgetAngle}">
+						<slot/>
+					</view>
+					<view v-if="widgetPos=='right' &&  widgetUrl==''" class="bp-handle-widget" :style="{flexDirection: 'row',borderRadius:mwidgetBorderRadius,left: moffset,width:mwidgetWidth,height:mwidgetHeight,opacity:widgetOpacity,transform: mwidgetAngle}">
+						<slot/>
+					</view>
+					<view v-if="widgetPos=='bottom' && widgetUrl==''" class="bp-handle-widget" :style="{flexDirection: 'column',borderRadius:mwidgetBorderRadius,top: moffset,width:mwidgetWidth,height:mwidgetHeight,opacity:widgetOpacity,transform: mwidgetAngle}">
+						<slot/>
+					</view>
+					<view v-if="widgetPos=='left' && widgetUrl==''" class="bp-handle-widget" :style="{flexDirection: 'row',borderRadius:mwidgetBorderRadius,right: moffset,width:mwidgetWidth,height:mwidgetHeight,opacity:widgetOpacity,transform: mwidgetAngle}">
+						<slot/>
+					</view>
+					<!-- #endif -->
 				</view>
 			</movable-view>
 		</movable-area>
+		<!-- 进度值 -->
 		<text class="bp-value" v-if="showValueState() || (infoAlign=='center'&&direction!='vertical' && showInfo)" 
 		:style="{color:infoColor,fontSize:infoFontSize,left:valueLeft,width:valueWidth()+'px'}">{{ infoContent=='subValue'?msubValue:showValue }}{{ infoEndText }}</text>
 	</view>
@@ -63,19 +86,13 @@
 		mounted() {
 			// #ifndef APP-NVUE
 			/**
-			 * 非NVUE滑动事件获取到的位置是相对于屏幕的，获取组件位置，用于计算滑块位置
+			 * 非NVUE movable-area 滑动事件获取到的位置是相对于文档的，获取组件位置，用于计算滑块位置
 			 */
-			let query = uni.createSelectorQuery().in(this)
-			query.select('.bing-progress').boundingClientRect(data => {
-				this.mainInfo.top = data.top
-				this.mainInfo.left = data.left
-				this.mainInfo.bottom = data.bottom
-				this.mainInfo.right = data.right
-			}).exec()
+			this.updateRect()
 			// #endif
-	
-			this.percent = Math.abs((this.valueFormat(this.value) - this.min) / (this.max - this.min))
-			this.subPercent = Math.abs((this.valueFormat(this.subValue,true) - this.min) / (this.max - this.min))
+			this.mmax = this.valueFormat(this.max,false)
+			this.percent = Math.abs((this.valueFormat(this.value) - this.min) / (this.mmax - this.min))
+			this.subPercent = Math.abs((this.valueFormat(this.subValue,true) - this.min) / (this.mmax - this.min))
 			if(this.reverse) {
 				if(this.direction!='vertical') {
 					this.handleX = (1 - this.percent) * this.barMaxLength
@@ -92,11 +109,19 @@
 					this.handleY = (1 - this.percent) * this.barMaxLength
 				}
 			}
+			if(this.bpname=='test') {
+				console.log(this.mainInfo)
+			}
 		},
 		/**
 		 * sub表示副进度条属性
 		 */
 		props: {
+			// 组件名字
+			bpname: {
+				type: String,
+				default: ''
+			},
 			width: {
 				type: String,
 				default: '300px'
@@ -139,7 +164,7 @@
 				type: String,
 				default: '5px'
 			},
-			// active and sunActive 是否显示圆角 NVUE默认true，其他默认false
+			// active and subActive 是否显示圆角 NVUE默认true，其他默认false
 			// #ifdef APP-NVUE
 			isActiveCircular: {
 				type: Boolean,
@@ -193,6 +218,7 @@
 				type: String,
 				default: 'value'
 			},
+			// 进度值显示位置 left, right, center, handle
 			infoAlign: {
 				type: String,
 				default: 'right'
@@ -236,7 +262,43 @@
 				type: Boolean,
 				default: false
 			},
-			
+			// 挂件位置 top, right, bottom, left
+			widgetPos: {
+				type: String,
+				default: "top"
+			},
+			widgetHeight: {
+				type: [String,Number],
+				default: '40px'
+			},
+			widgetWidth: {
+				type: [String,Number],
+				default: '50px'
+			},
+			widgetBorderRadius: {
+				type: [String,Number],
+				default: '5px'
+			},
+			// 挂件不透明度 0完全透明 1不透明
+			widgetOpacity: {
+				type: [String,Number],
+				default: 1
+			},
+			// 挂件距离组件的偏移量，正数原理组件，负数靠近组件
+			widgetOffset: {
+				type: [String,Number],
+				default: '0px'
+			},
+			// 挂件图片
+			widgetUrl: {
+				type: String,
+				default: ''
+			},
+			// 挂件旋转角度
+			widgetAngle: {
+				type: [String,Number],
+				default: 0
+			}
 		},
 		data() {
 			return {
@@ -254,7 +316,10 @@
 				touchState: false,
 				screenHeight: 0,
 				screenWidth: 0,
-				msubValue: 0
+				msubValue: 0,
+				moveable: true,
+				lastTouchTime: 0,
+				mmax: 100
 			}
 		},
 		watch: {
@@ -265,32 +330,37 @@
 			value(newValue, oldValue) {
 				if(!this.touchState) {
 					newValue = this.valueSetBoundary(newValue)
-					this.percent = Math.abs((newValue - this.min) / (this.max - this.min))
+					this.percent = Math.abs((newValue - this.min) / (this.mmax - this.min))
 				}
 			},
 			showValue(newValue, oldValue) {
 				// 步进
 				if(!this.continuous) {
+					let percent
 					if(this.reverse) {
 						if(this.direction!='vertical') {
-							this.handleX = Math.abs(1 - (newValue - this.min) / (this.max - this.min)) * this.barMaxLength
+							percent = Math.abs(1 - (newValue - this.min) / (this.mmax - this.min))
+							this.handleX = percent * this.barMaxLength
 						}
 						else {
-							this.handleY = Math.abs((newValue - this.min) / (this.max - this.min)) * this.barMaxLength
+							percent = Math.abs((newValue - this.min) / (this.mmax - this.min))
+							this.handleY = percent * this.barMaxLength
 						}
 					}
 					else {
 						if(this.direction!='vertical') {
-							this.handleX = Math.abs((newValue - this.min) / (this.max - this.min)) * this.barMaxLength
+							percent = Math.abs((newValue - this.min) / (this.mmax - this.min))
+							this.handleX = percent * this.barMaxLength
 						}
 						else {
-							this.handleY = (1 - Math.abs((newValue - this.min) / (this.max - this.min))) * this.barMaxLength
+							percent = (1 - Math.abs((newValue - this.min) / (this.mmax - this.min)))
+							this.handleY = percent * this.barMaxLength
 						}
 					}
 					
 				}
-				this.$emit("change", {type: 'change',value:this.showValue,subValue:this.msubValue})
-				this.$emit("valuechange", {type: 'valuechange',value:this.showValue,subValue:this.msubValue})
+				this.$emit("change", {bpname: this.bpname,type: 'change',value:this.showValue,subValue:this.msubValue})
+				this.$emit("valuechange", {bpname: this.bpname,type: 'valuechange',value:this.showValue,subValue:this.msubValue})
 			},
 			percent(newValue, oldValue) {
 				// 连续
@@ -322,11 +392,14 @@
 				else {
 					this.msubValue = this.valueFormat(newValue, true)
 				}
-				this.subPercent = Math.abs((newValue - this.min) / (this.max - this.min))
-				this.$emit("change", {type: 'change',value:this.showValue,subValue:this.msubValue})
-				this.$emit("subvaluechange", {type: 'subvaluechange',value:this.showValue,subValue:this.msubValue})
+				this.subPercent = Math.abs((newValue - this.min) / (this.mmax - this.min))
+				this.$emit("change", {bpname: this.bpname,type: 'change',value:this.showValue,subValue:this.msubValue})
+				this.$emit("subvaluechange", {bpname: this.bpname,type: 'subvaluechange',value:this.showValue,subValue:this.msubValue})
 				
 			},
+			max(newValue,oldValue) {
+				this.mmax = this.valueFormat(newValue,false)
+			}
 		},
 		computed: {
 			bpWidth() {
@@ -425,7 +498,7 @@
 					percent = this.percent
 				}
 				else {
-					percent = Math.abs((this.showValue - this.min) / (this.max - this.min))
+					percent = Math.abs((this.showValue - this.min) / (this.mmax - this.min))
 				}
 				return this.barMaxLength * percent + 'px'
 			},
@@ -436,7 +509,7 @@
 						percent = this.percent
 					}
 					else {
-						percent = Math.abs((this.showValue - this.min) / (this.max - this.min))
+						percent = Math.abs((this.showValue - this.min) / (this.mmax - this.min))
 					}
 					return this.barMaxLength * percent + 'px'
 				}
@@ -474,7 +547,7 @@
 					return this.barMaxLength * this.subPercent + 'px'
 				}
 				else {
-					return this.barMaxLength * Math.abs((this.msubValue - this.min) / (this.max - this.min)) + 'px'
+					return this.barMaxLength * Math.abs((this.msubValue - this.min) / (this.mmax - this.min)) + 'px'
 				}
 				
 			},
@@ -484,7 +557,7 @@
 						return this.barMaxLength * this.subPercent + 'px'
 					}
 					else {
-						this.barMaxLength * Math.abs((this.msubValue - this.min) / (this.max - this.min)) + 'px'
+						this.barMaxLength * Math.abs((this.msubValue - this.min) / (this.mmax - this.min)) + 'px'
 					}
 					
 				}
@@ -514,7 +587,7 @@
 				}
 			},
 			showValue() {
-				return this.valueFormat(this.percent * (this.max - this.min) + this.min)
+				return this.valueFormat(this.percent * (this.mmax - this.min) + this.min)
 			},
 			textHeight() {
 				let infoSize = this.sizeDeal(this.infoFontSize)
@@ -539,30 +612,98 @@
 				let handleWidth = this.sizeDeal(this.handleWidth)
 				return width - this.textWidth() - handleWidth[0]
 			},
+			mwidgetWidth() {
+				return this.sizeDeal(this.widgetWidth)[2];
+			},
+			mwidgetHeight() {
+				return this.sizeDeal(this.widgetHeight)[2];
+			},
+			moffset() {
+				let off = this.sizeDeal(this.widgetOffset);
+				// console.log(off)
+				switch(this.widgetPos) {
+					case 'top':
+						return this.sizeDeal(this.mhandleHeight)[0] + off[0] + 'px'
+					case 'right':
+						return this.sizeDeal(this.mhandleWidth)[0] + off[0] + 'px'
+					case 'bottom':
+						return this.sizeDeal(this.mhandleHeight)[0] + off[0] + 'px'
+					case 'left':
+						return this.sizeDeal(this.mhandleWidth)[0] + off[0] + 'px'
+				}
+				return 0
+			},
+			mwidgetBorderRadius() {
+				return this.sizeDeal(this.widgetBorderRadius)[2];
+			},
+			mwidgetAngle() {
+				return "rotate("+Number(this.widgetAngle)+"deg)"
+			}
 		},
 		methods: {
+			prevent(e) {
+				console.log(1)
+			},
+			updateRect() {
+				// #ifndef APP-NVUE
+				/**
+				 * 非NVUE movable-area 滑动事件获取到的位置是相对于文档的，获取组件位置，用于计算滑块位置
+				 */
+				let query = uni.createSelectorQuery().in(this)
+				query.select('.bing-progress').boundingClientRect(data => {
+					this.mainInfo.top = data.top
+					this.mainInfo.left = data.left
+					this.mainInfo.bottom = data.bottom
+					this.mainInfo.right = data.right
+				}).exec()
+				// #endif
+			},
 			touchstart(e) {
 				if(!this.disabled) {
+					// #ifdef APP-NVUE
+					e.stopPropagation()
+					e.target.attr.preventGesture = true
+					if(this.direction == 'vertical' && e.target.attr.id != 'bp-mview' && (e.timestamp - this.lastTouchTime > 100)) {
+						this.moveable = false
+					}
+					this.lastTouchTime = e.timestamp
+					// #endif
+					// #ifndef APP-NVUE
+					/**
+					 * 防止组件在文档流中的位置被修改，导致组件进度值异常
+					 */
+					this.updateRect()
+					// #endif
+					// 阻止组件信息异常情况下的进度值修改
+					if(this.mainInfo.top > this.screenHeight) {
+						this.$emit("dragstart", {bpname: this.bpname,type: 'dragstart',value:this.showValue,subValue:this.msubValue})
+						return
+					}
 					this.touchState = true
 					let detail = e.changedTouches[0]
 					this.handleMove(detail)
-					this.$emit("dragstart", {type: 'dragstart',value:this.showValue,subValue:this.msubValue})
+					this.$emit("dragstart", {bpname: this.bpname,type: 'dragstart',value:this.showValue,subValue:this.msubValue})
 				}
 			},
 			touchmove(e) {
 				if(!this.disabled) {
-					e.stopPropagation()
 					let detail = e.changedTouches[0]
 					this.handleMove(detail)
-					this.$emit("dragging", {type: 'dragging',value:this.showValue,subValue:this.msubValue})
+					this.$emit("dragging", {bpname: this.bpname,type: 'dragging',value:this.showValue,subValue:this.msubValue})
 				}
 			},
 			touchend(e) {
 				if(!this.disabled) {
+					// #ifdef APP-NVUE
+					if(!this.moveable) {
+						this.moveable = true
+						return
+					}
+					// #endif
 					let detail = e.changedTouches[0]
 					this.handleMove(detail)
 					this.touchState = false
-					this.$emit("dragend", {type: 'dragend',value:this.showValue,subValue:this.msubValue})
+					this.$emit("dragend", {bpname: this.bpname,type: 'dragend',value:this.showValue,subValue:this.msubValue})
 				}
 			},
 			handleMove(detail) {
@@ -592,7 +733,7 @@
 					percent = 1 - (detail.pageY - handleWidth[0]/2- 1) / this.barMaxLength
 					// #endif
 					// #ifndef APP-NVUE
-					percent = 1 - (detail.pageY - this.mainInfo.top - handleWidth[0]/2)/ this.barMaxLength
+					percent = 1 - (detail.clientY - this.mainInfo.top - handleWidth[0]/2)/ this.barMaxLength
 					// #endif
 				}
 				percent = percent > 0 ? percent : 0
@@ -612,12 +753,12 @@
 			},
 			valueSetBoundary(value) {
 				// 控制value在合法范围内
-				if(this.max > this.min) {
-					value = value < this.max ? value : this.max
+				if(this.mmax > this.min) {
+					value = value < this.mmax ? value : this.mmax
 					value = value > this.min ? value : this.min
 				}
 				else {
-					value = value > this.max ? value : this.max
+					value = value > this.mmax ? value : this.mmax
 					value = value < this.min ? value : this.min
 				}
 				return value
@@ -670,14 +811,14 @@
 			},
 			textWidth() {
 				if(this.showValueState()) {
-					let numWidth = this.max.toString().length> this.min.toString().length? this.max.toString().length: this.min.toString().length
+					let numWidth = this.mmax.toString().length> this.min.toString().length? this.mmax.toString().length: this.min.toString().length
 					let textWidth = ((numWidth + this.stepInfo()[1]) * 0.7 + this.infoEndText.length) * this.sizeDeal(this.infoFontSize)[0]
 					return Number(textWidth.toFixed(2))
 				}
 				return 0
 			},
 			valueWidth() {
-				let numWidth = this.max.toString().length> this.min.toString().length? this.max.toString().length: this.min.toString().length
+				let numWidth = this.mmax.toString().length> this.min.toString().length? this.mmax.toString().length: this.min.toString().length
 				let textWidth = ((numWidth + this.stepInfo()[1]) * 0.7 + this.infoEndText.length) * this.sizeDeal(this.infoFontSize)[0]
 				return Number(textWidth.toFixed(2))
 			},

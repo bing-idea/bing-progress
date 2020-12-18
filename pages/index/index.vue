@@ -1,13 +1,13 @@
 <template>
-	<view class="content">
+	<view class="content" @click="show=false">
 		<!-- 垂直进度条 -->
 		<text class="info">垂直进度条</text>
 		<view class="vertical">
-			<!-- 事件监听 进度值绑定 -->
-			<bing-progress class="bp" @change="change" @valuechange="change" @dragging="dragging" @gragstart="dragstart" @dragend="dragend" 
+			<!-- 事件监听 进度值绑定 拖柄图片-->
+			<bing-progress class="bp" handleImgUrl="../../static/logo.png"  @change="change" @valuechange="change" @dragging="dragging" @gragstart="dragstart" @dragend="dragend" 
 			direction="vertical" width="200px" :value="value" :step="10" 
 			:subValue="subValue" backgroundColor="#ff0000"></bing-progress>
-			<bing-progress class="bp" direction="vertical" width="200px" :value="value" :step="10"
+			<bing-progress class="bp" direction="vertical" :showInfo="true" infoAlign="handle" width="200px" :value="value" :step="10"
 			:subValue="subValue" backgroundColor="#ff0000" :reverse="true"></bing-progress>
 			<!-- 垂直时在拖柄中显示进度值 须同时满足： direction="vertical" infoAlign="handle" :showinfo="true" -->
 			<bing-progress class="bp" direction="vertical" infoAlign="handle" handleWidth="35px" handleHeight="45px" width="200px" :value="value" :step="10" 
@@ -33,10 +33,10 @@
 		<text class="info">水平进度条</text>
 		<view class="horizontal">
 			<!-- 反转  进度值在拖柄内 进度值字体大小设置 拖柄颜色设置-->
-			<bing-progress class="bp" infoEndText="%" infoAlign="handle" infoColor="#ffffff" infoFontSize="14px" handleColor="#aa55ff" :reverse="true" barBorderRadius="20px" backgroundColor="#ff0000" bpBorderRadius="20px"
+			<bing-progress class="bp" infoEndText="%" infoAlign="handle" infoColor="#ffffff" infoFontSize="14px" borderRadius="20px" handleColor="#aa55ff" :reverse="true" barBorderRadius="20px" backgroundColor="#ff0000" bpBorderRadius="20px"
 			:subValue="subValue" :value="value"></bing-progress>
 			<!--圆角 主副进度步长设置 进度变化设置为非连续，即步进 进度值在中间-->
-			<bing-progress class="bp" :value="20" infoAlign="center" :isActiveCircular="true" barBorderRadius="30px" infoContent="subValue" :step="10.5" :subStep="10" handleWidth="0" :continuous="false" :subContinuous="false"
+			<bing-progress class="bp" :value="value" :max="100" infoAlign="center" :isActiveCircular="false" barBorderRadius="20px" infoContent="value" :step="10.5" :subStep="10" handleWidth="0" :continuous="false" :subContinuous="false"
 			:subValue="subValue"></bing-progress>
 			<!-- 进度值在左侧 设置进度值颜色-->
 			<bing-progress class="bp" :max="100" infoAlign="left" :value="value" infoColor="#0000ff"
@@ -44,10 +44,25 @@
 			<!-- 细进度条  最大值比最小值小-->
 			<bing-progress class="bp" infoAlign="right" strokeWidth="3px" handleHeight="10px" handleWidth="10px" handleBorderRadius="5px"
 			 :max="-20" :min="120" :value="value" :subValue="subValue"></bing-progress>
-			<!-- 设置拖柄为图片 不显示进度值-->
-			<bing-progress handleImgUrl="../../static/logo.png" :showInfo="false" handleBorderRadius="10px"></bing-progress>
 			<!-- 设置为不可拖动 -->
 			<bing-progress class="bp" infoAlign="handle" :value="value" :subValue="subValue" :disabled="true"></bing-progress>
+		</view>
+		<!-- 弹出层 -->
+		<button class="info" @click.stop.prevent="toggle">{{show?'隐藏':'显示'}}弹出层、小挂件</button>
+		<view :class="show?'slide-in':''" class="popup" @click="toggle">
+			<view class="left">
+				<bing-progress widgetHeight="30" :widgetOpacity="0.5" handleImgUrl="../../static/logo.png" :showInfo="false" handleBorderRadius="10px"></bing-progress>
+				<bing-progress widgetPos="top" widgetHeight="50px" widgetWidth="50px" widgetUrl="../../static/p2.png" widgetOffset="0px"  :widgetOpacity="1" handleImgUrl="../../static/logo.png" :showInfo="false" handleBorderRadius="10px"></bing-progress>
+				<bing-progress widgetPos="right" widgetUrl="../../static/p1.jpg" handleImgUrl="../../static/logo.png" :showInfo="false" handleBorderRadius="10px"></bing-progress>
+				<!-- 使用插槽自定义挂件 -->
+				<bing-progress bpname="bp1" widgetHeight="50px" widgetWidth="50px" widgetPos="top" widgetOffset="10px" @change="change" @dragstart="dragstart" @dragend="dragend" :widgetOpacity="1" infoAlign="handle" :showInfo="true" handleBorderRadius="10px">
+					<view class="widget" v-if="showWidget">{{widgetText}}</view>
+				</bing-progress>
+				<bing-progress widgetPos="bottom" widgetAngle="180" widgetUrl="../../static/p3.png"  widgetHeight="50px" widgetWidth="50px"  widgetOffset="-10px" widgetOpacity="0.6" handleImgUrl="../../static/logo.png" :showInfo="false" handleBorderRadius="10px"></bing-progress>
+			</view>
+			<view class="right">
+				<bing-progress bpname="test" widgetPos="left" widgetAngle="-90" :value="value" direction="vertical" widgetUrl="../../static/p3.png"  widgetHeight="50px" widgetWidth="50px"  widgetOffset="-10px" widgetOpacity="0.6" handleImgUrl="../../static/logo.png" :showInfo="false" handleBorderRadius="10px"></bing-progress>
+			</view>
 		</view>
 	</view>
 </template>
@@ -65,23 +80,41 @@
 				subValue: 20,
 				addTimer: null,
 				reduceTimer: null,
-				direction: 'vertical'
+				direction: 'vertical',
+				show: false,
+				widgetText: '',
+				showWidget: false
 			}
 		},
 		onLoad() {
 			
 		},
 		methods: {
+			toggle(e) {
+				// #ifdef APP-APP-NVUE
+				e.stopPropagation()
+				// #endif
+				this.show = !this.show
+			},
 			change(e) {
+				if(e.bpname=="bp1") {
+					this.widgetText = e.value
+				}
 				console.log('change',e)
 			},
 			dragging(e) {
 				console.log('ing',e)
 			},
 			dragend(e) {
+				if(e.bpname=="bp1") {
+					this.showWidget = false
+				} 
 				console.log('end',e)
 			},
 			dragstart(e) {
+				if(e.bpname=="bp1") {
+					this.showWidget = true
+				} 
 				console.log('start',e)
 			},
 			add() {
@@ -150,15 +183,18 @@
 
 <style>
 	.content {
+		position: relative;
 		/* #ifndef APP-NVUE */
 		display: flex;
 		/* #endif */
 		flex-direction: column;
 		align-items: center;
-		justify-content: center;
+		justify-content: flex-start;
+		min-height: 100vh;
+		overflow: hidden;
 	}
 	.bp {
-		margin: 5px;
+		margin: 5px 10px;
 	} 
 	.horizontal {
 		/* #ifndef APP-NVUE */
@@ -175,7 +211,6 @@
 		flex-direction: row;
 		justify-content: space-around;
 		align-items: center;
-		width: 100vw;
 	}
 	.center {
 		/* #ifndef APP-NVUE */
@@ -214,10 +249,41 @@
 		border-bottom-color: #ececec;
 		border-bottom-width: 1px;
 		border-bottom-style: solid;
-		width: 100vw;
+		width: 750rpx;
 		text-align: center;
 		background-color: #f8f8f8;
 		padding: 5px;
 		font-size: 16px;
+	}
+
+	.popup {
+		display: flex;
+		flex-direction: row;
+		justify-content: space-evenly;
+		align-items: center;
+		position: absolute;
+		left: 0;
+		bottom: 0; 
+		width: 100%;
+		height: 300px;
+		background-color: #007AFF;
+		transition: transform .4s ease-out;
+		transform: translateY(999px);
+		z-index: 99;
+		overflow: hidden;
+	}
+	.slide-in {
+		transform: translateY(0);
+	}
+	.widget {
+		width: 50px;
+		height: 50px;
+		font-size: 24px;
+		background-color: white;
+		border: gray solid 1px;
+		border-radius: 25px;
+		text-align: center;
+		line-height: 50px;
+		opacity: 0.8;
 	}
 </style>
